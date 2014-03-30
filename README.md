@@ -4,6 +4,8 @@ Migrate Bitbucket issues to Github
 
 Migrate Bitbucket issues to Github, with comments.
 
+We use the [Python wrapper for Github API v3](https://github.com/copitux/python-github3) to achieve this.
+
 
 Installation
 ------------
