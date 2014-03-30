@@ -18,9 +18,7 @@ from pygithub3 import Github
 # The structure of this dict is:
 # ASSIGNEES = {'bitbucket_user': 'github_user'}
 
-ASSIGNEES = {'.DEFAULT': 'default_commiter',
-             'bitbucket_user': 'github_user',
-             None: None,  # no, this isn't wrong!
+ASSIGNEES = {'.DEFAULT': 'default_committer',
              }
 
 
@@ -175,8 +173,16 @@ def import_issues_and_comments(issues, comments, argv):
 
 
 def main():
-
     argv = _parse_args()
+
+    if argv.no_assignees:
+        ASSIGNEES['.DEFAULT'] = None
+    else:
+        if (ASSIGNEES.get('.DEFAULT') == 'default_committer'
+                and len(ASSIGNEES) == 1):
+            print('Set ASSIGNEES dict, or inform --no-assignees option '
+                  'to ignore it.')
+            exit(1)
 
     with open(argv.file) as f:
         bitbucket_data = json.load(f)
