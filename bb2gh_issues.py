@@ -42,6 +42,10 @@ def _parse_args():
         '-u', '--user', dest='username',
         help=('Github user who repo belongs to. '
               'If ommited, --login used.'))
+    argparser.add_argument(
+        '--no-assignees', dest='no_assignees',
+        action='store_const', const=True,
+        help='You will not use assignees in issues.')
 
     argv = argparser.parse_args()
     if not argv.username:
