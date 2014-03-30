@@ -63,6 +63,10 @@ Options explained
 
     If ommited, `--login` will be used.
 
+1. `--no-assignees`
+
+    Don't use assignee information.
+
 1. `file`
 
     The JSON file name with Bitbucket exported issues.
