@@ -31,13 +31,14 @@ You must [export your issues in Bitbucket](https://confluence.atlassian.com/disp
 
 Issues import cannot be undone. So, I suggest you to run this process in a test repository before importing them to your real one.
 
-Images in our issues will not be migrated. If you can help me with this, I'll accept your pull request.
 
 All issues created on Github will have your `--login` user as the creator and the commenter. So, each issue and comment will have a note to tell you who and when created the issue (or comment).
 
 You can preserve issues' assignees. Edit `bb2gh_issues.py` and change the `ASSIGNEES` dict to represent your situation. Read comments on source code.
 
 Depending on how many issues and comments you have, this process can take a while. Don't panic.
+
+We don't import milestones or images. Pull requests are welcome. :-)
 
 
 Options explained
