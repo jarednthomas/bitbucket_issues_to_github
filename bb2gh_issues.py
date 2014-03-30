@@ -74,13 +74,16 @@ def import_issue(bitbucket_data, argv):
     if 'hold' in bitbucket_data['status']:
         labels.append(bitbucket_data['status'])
 
-    if bitbucket_data['assignee'] in ASSIGNEES:
-        assignee = ASSIGNEES[bitbucket_data['assignee']]
+    if bitbucket_data['assignee'] and (not argv.no_assignees):
+        if bitbucket_data['assignee'] in ASSIGNEES:
+            assignee = ASSIGNEES[bitbucket_data['assignee']]
+        else:
+            assignee = ASSIGNEES['.DEFAULT']
+            comment_message.append(
+                '(Original issue was assigned to {assignee})'
+                ''.format(**bitbucket_data))
     else:
-        assignee = ASSIGNEES['.DEFAULT']
-        comment_message.append(
-            '(Original issue was assigned to {assignee})'
-            ''.format(**bitbucket_data))
+        assignee = None
 
     issue_body = '\n\n'.join([
         '(Original issue {id} created by {reporter} on {created_on})',
