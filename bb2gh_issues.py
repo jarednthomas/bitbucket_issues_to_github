@@ -29,6 +29,21 @@ BITBUCKET_STATUSES_THAT_ARE_GITHUB_LABELS = [
     'on hold', 'duplicate', 'invalid', 'wontfix']
 
 
+# Status equivalence between services.
+
+GITHUB_OPEN_STATE = 'open'
+GITHUB_CLOSED_STATE = 'closed'
+BITBUCKET_STATUSES_MAPPED_TO_GITHUB = {
+    'new': GITHUB_OPEN_STATE,
+    'open': GITHUB_OPEN_STATE,
+    'resolved': GITHUB_CLOSED_STATE,
+    'on hold': GITHUB_OPEN_STATE,
+    'invalid': GITHUB_CLOSED_STATE,
+    'duplicate': GITHUB_CLOSED_STATE,
+    'wontfix': GITHUB_CLOSED_STATE
+}
+
+
 def _parse_args():
     """Create and parse command line args."""
 
