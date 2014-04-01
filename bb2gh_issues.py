@@ -129,16 +129,21 @@ def import_issue(bitbucket_data, argv):
 
     print('Imported as {github_issue}'.format(github_issue=github_issue))
 
-    if bitbucket_data['status'] == 'resolved':
+    if BITBUCKET_STATUSES_MAPPED_TO_GITHUB.get(
+            bitbucket_data['status']) == GITHUB_CLOSED_STATE:
         comment_message.append(
-            '(Original issue {id} closed on {updated_on})'
+            '(Original issue {id} last updated on {updated_on})'
+            ''.format(**bitbucket_data))
+        comment_message.append(
+            '(Issue automaticaly closed due to status in Bitbucket: '
+            '{status})'
             ''.format(**bitbucket_data))
 
-        github_data['state'] = 'closed'
+        github_data['state'] = GITHUB_CLOSED_STATE
         github_updated_issue = argv.gh.issues.update(
             github_issue.number, github_data,
             user=argv.username, repo=argv.repo)
-        print('Closed'.format(github_issue=github_issue))
+        print('Closed')
 
     if comment_message:
         argv.gh.issues.comments.create(
