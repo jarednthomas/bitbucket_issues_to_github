@@ -65,8 +65,8 @@ def _parse_args():
         help=('Github user who repo belongs to. '
               'If ommited, --login used.'))
     argparser.add_argument(
-        '--no-assignees', dest='no_assignees',
-        action='store_const', const=True,
+        '--no-assignees', dest='consider_assignees',
+        action='store_const', const=False, default=True,
         help='You will not use assignees in issues.')
 
     argv = argparser.parse_args()
@@ -97,7 +97,7 @@ def import_issue(bitbucket_data, argv):
             BITBUCKET_STATUSES_THAT_ARE_GITHUB_LABELS):
         labels.append(bitbucket_data['status'])
 
-    if bitbucket_data['assignee'] and (not argv.no_assignees):
+    if bitbucket_data['assignee'] and argv.consider_assignees:
         if bitbucket_data['assignee'] in ASSIGNEES:
             assignee = ASSIGNEES[bitbucket_data['assignee']]
         else:
@@ -210,14 +210,14 @@ def import_issues_and_comments(issues, comments, argv):
 def main():
     argv = _parse_args()
 
-    if argv.no_assignees:
-        ASSIGNEES['.DEFAULT'] = None
-    else:
+    if argv.consider_assignees:
         if (ASSIGNEES.get('.DEFAULT') == 'default_committer'
                 and len(ASSIGNEES) == 1):
             print('Set ASSIGNEES dict, or inform --no-assignees option '
                   'to ignore it.')
             exit(1)
+    else:
+        ASSIGNEES['.DEFAULT'] = None
 
     with open(argv.file) as f:
         bitbucket_data = json.load(f)
