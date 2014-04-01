@@ -22,6 +22,13 @@ ASSIGNEES = {'.DEFAULT': 'default_committer',
              }
 
 
+# Github doesn't have all statuses as Bitbucket.
+# So, we use labels to identify issues.
+
+BITBUCKET_STATUSES_THAT_ARE_GITHUB_LABELS = [
+    'on hold', 'duplicate', 'invalid', 'wontfix']
+
+
 def _parse_args():
     """Create and parse command line args."""
 
@@ -71,7 +78,8 @@ def import_issue(bitbucket_data, argv):
               bitbucket_data['priority']
               ]
 
-    if 'hold' in bitbucket_data['status']:
+    if (bitbucket_data['status'] in
+            BITBUCKET_STATUSES_THAT_ARE_GITHUB_LABELS):
         labels.append(bitbucket_data['status'])
 
     if bitbucket_data['assignee'] and (not argv.no_assignees):
