@@ -2,6 +2,18 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, unicode_literals
+
+import ssl
+from functools import wraps
+def sslwrap(func):
+    @wraps(func)
+    def bar(*args, **kw):
+        kw['ssl_version'] = ssl.PROTOCOL_TLSv1
+        return func(*args, **kw)
+    return bar
+
+ssl.wrap_socket = sslwrap(ssl.wrap_socket)
+
 import argparse
 import json
 import sys
@@ -123,9 +135,15 @@ def import_issue(bitbucket_data, argv):
     # print("Github data")
     # print("-----------")
     # print(github_data)
-
-    github_issue = argv.gh.issues.create(
-        github_data, user=argv.username, repo=argv.repo)
+    
+    github_issue = None
+    while (github_issue == None):
+      try:
+        github_issue = argv.gh.issues.create(
+          github_data, user=argv.username, repo=argv.repo)
+      except:
+        print('Exception')
+        sleep(10)
 
     print('Imported as {github_issue}'.format(github_issue=github_issue))
 
@@ -140,16 +158,28 @@ def import_issue(bitbucket_data, argv):
             ''.format(**bitbucket_data))
 
         github_data['state'] = GITHUB_CLOSED_STATE
-        github_updated_issue = argv.gh.issues.update(
-            github_issue.number, github_data,
-            user=argv.username, repo=argv.repo)
+        github_updated_issue = None
+        while (github_updated_issue == None):
+          try:
+            github_updated_issue = argv.gh.issues.update(
+                github_issue.number, github_data,
+                user=argv.username, repo=argv.repo)
+          except:
+            print('Ex3ception')
+            sleep(10)
         print('Closed')
 
     if comment_message:
-        argv.gh.issues.comments.create(
-            number=github_issue.number,
-            message='\n\n'.join(comment_message),
-            user=argv.username, repo=argv.repo)
+        github_new_comment = None
+        while (github_new_comment == None):
+          try:
+            github_new_comment = argv.gh.issues.comments.create(
+                number=github_issue.number,
+                message='\n\n'.join(comment_message),
+                user=argv.username, repo=argv.repo)
+          except:
+            print('Ex4ception')
+            sleep(10)
 
     return github_issue.number
 
@@ -161,13 +191,19 @@ def import_comment(github_issue_number, comment, argv):
         # ignores status changing comments.
         return
 
-    ret = argv.gh.issues.comments.create(
-        number=github_issue_number,
-        message=('(Original comment by {user} on {created_on})\n\n'
-                 '{content}\n\n'
-                 ''.format(**comment)),
-        user = argv.username,
-        repo = argv.repo)
+    ret = None
+    while (ret == None):
+      try:
+        ret = argv.gh.issues.comments.create(
+            number=github_issue_number,
+            message=('(Original comment by {user} on {created_on})\n\n'
+                     '{content}\n\n'
+                     ''.format(**comment)),
+            user = argv.username,
+            repo = argv.repo)
+      except:
+        print('Ex2ception')
+        sleep(10)
 
 
 def import_issues_and_comments(issues, comments, argv):
@@ -192,7 +228,7 @@ def import_issues_and_comments(issues, comments, argv):
         for bitbucket_comment in issue_comments:
             comments_read += 1
              # delay comment insertion to order comments properly.
-            sleep(1)
+            sleep(0.25)
             import_comment(
                 github_issue_number=github_issue_number,
                 comment=bitbucket_comment,
