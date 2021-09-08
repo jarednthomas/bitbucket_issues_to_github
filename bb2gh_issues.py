@@ -74,6 +74,10 @@ def _parse_args():
         help=('Github user who repo belongs to. '
               'If ommited, --login used.'))
     argparser.add_argument(
+        '--start-from', dest='startfrom', default="",
+        help=('Ignore issues whose title compares less than this.')
+    )
+    argparser.add_argument(
         '--no-assignees', dest='consider_assignees',
         action='store_const', const=False, default=True,
         help='You will not use assignees in issues.')
@@ -84,7 +88,7 @@ def _parse_args():
     return argv
 
 
-def import_issue(bitbucket_data, argv):
+def import_issue(repo, bitbucket_data, argv):
     """Import a single issue."""
 
     comment_message = []
@@ -99,8 +103,9 @@ def import_issue(bitbucket_data, argv):
 
     labels = ['imported',  # you'll know what issues were imported.
               bitbucket_data['kind'],
-              bitbucket_data['priority']
-              ]
+              bitbucket_data['priority']]
+    if bitbucket_data['component']:
+        labels.append(bitbucket_data['component'])
 
     if (bitbucket_data['status'] in
             BITBUCKET_STATUSES_THAT_ARE_GITHUB_LABELS):
@@ -126,22 +131,18 @@ def import_issue(bitbucket_data, argv):
         'title': bitbucket_data['title'],
         'body': issue_body,
         'labels': labels,
-        'assignee': assignee,
     }
+
+    if assignee:
+        github_data['assignee'] = assignee
+
 
     # print("Github data")
     # print("-----------")
     # print(github_data)
 
-    github_issue = None
-    while github_issue is None:
-        try:
-            github_issue = argv.gh.issues.create(
-                github_data, user=argv.username, repo=argv.repo
-            )
-        except:
-            print('Exception')
-            sleep(10)
+    github_issue = repo.create_issue(**github_data)
+    sleep(3)
 
     print('Imported as {github_issue}'.format(github_issue=github_issue))
 
@@ -151,62 +152,32 @@ def import_issue(bitbucket_data, argv):
             '(Original issue {id} last updated on {updated_on})'
             ''.format(**bitbucket_data))
         comment_message.append(
-            '(Issue automaticaly closed due to status in Bitbucket: '
+            '(Issue automatically closed due to status in Bitbucket: '
             '{status})'
             ''.format(**bitbucket_data))
 
-        github_data['state'] = GITHUB_CLOSED_STATE
-        github_updated_issue = None
-        while github_updated_issue is None:
-            try:
-                github_updated_issue = argv.gh.issues.update(
-                    github_issue.number, github_data,
-                    user=argv.username, repo=argv.repo
-                )
-            except:
-                print('Exception')
-                sleep(10)
+        github_issue.edit(state=GITHUB_CLOSED_STATE)
         print('Closed')
 
     if comment_message:
-        github_new_comment = None
-        while github_new_comment is None:
-            try:
-                github_new_comment = argv.gh.issues.comments.create(
-                    number=github_issue.number,
-                    message='\n\n'.join(comment_message),
-                    user=argv.username, repo=argv.repo)
-            except:
-                print('Ex4ception')
-                sleep(10)
+        github_issue.create_comment("\n".join(comment_message))
 
-    return github_issue.number
+    return github_issue
 
 
-def import_comment(github_issue_number, comment, argv):
+def import_comment(github_issue, comment, argv):
     """Import a single comment."""
 
     if not comment['content']:
         # ignores status changing comments.
         return
 
-    ret = None
-    while ret is None:
-        try:
-            ret = argv.gh.issues.comments.create(
-                number=github_issue_number,
-                message=('(Original comment by {user} on {created_on})\n\n'
-                         '{content}\n\n'
-                         ''.format(**comment)),
-                user=argv.username,
-                repo=argv.repo
-            )
-        except:
-            print('Ex2ception')
-            sleep(10)
+    github_issue.create_comment(
+        '(Original comment by {user} on {created_on})\n\n'
+        '{content}\n\n'.format(**comment))
 
 
-def import_issues_and_comments(issues, comments, argv):
+def import_issues_and_comments(repo, issues, comments, argv):
     issues_read = issues_imported = 0
     comments_read = comments_imported = 0
 
@@ -215,7 +186,11 @@ def import_issues_and_comments(issues, comments, argv):
     for bitbucket_issue in issues:
         issues_read += 1
 
-        github_issue_number = import_issue(bitbucket_issue, argv=argv)
+        if bitbucket_issue["title"] <= argv.startfrom:
+            print(f"Skipping {bitbucket_issue['title']}")
+            continue
+
+        github_issue = import_issue(repo, bitbucket_issue, argv=argv)
         issues_imported += 1
 
         # get comments for this issue
@@ -227,10 +202,10 @@ def import_issues_and_comments(issues, comments, argv):
 
         for bitbucket_comment in issue_comments:
             comments_read += 1
-             # delay comment insertion to order comments properly.
-            sleep(0.25)
+            # delay comment insertion to order comments properly.
+            sleep(1)
             import_comment(
-                github_issue_number=github_issue_number,
+                github_issue=github_issue,
                 comment=bitbucket_comment,
                 argv=argv)
             comments_imported += 1
@@ -259,9 +234,10 @@ def main():
         bitbucket_data = json.load(f)
 
     gh = Github(argv.token)
-    argv.gh = gh
+    repo = gh.get_repo(argv.username + "/" + argv.repo)
 
     ret = import_issues_and_comments(
+        repo=repo,
         issues=bitbucket_data['issues'][:],
         comments=bitbucket_data['comments'],
         argv=argv)
