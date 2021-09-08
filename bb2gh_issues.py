@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, unicode_literals
-
 import ssl
 from functools import wraps
+import argparse
+import json
+from time import sleep
+from github import Github
+
+
 def sslwrap(func):
     @wraps(func)
     def bar(*args, **kw):
@@ -12,13 +16,9 @@ def sslwrap(func):
         return func(*args, **kw)
     return bar
 
+
 ssl.wrap_socket = sslwrap(ssl.wrap_socket)
 
-import argparse
-import json
-import sys
-from time import sleep
-from pygithub3 import Github
 
 # Assignees must have push access to repo. Otherwise, the process
 # will be interrupted.
@@ -64,11 +64,8 @@ def _parse_args():
     argparser.add_argument(
         'file', help='JSON file with BitBucket exported data')
     argparser.add_argument(
-        '-l', '--login', required=True,
-        help='Github login (required)')
-    argparser.add_argument(
-        '-p', '--password', required=True,
-        help='Github password (required)')
+        '-t', '--token', required=True,
+        help='Github access token')
     argparser.add_argument(
         '-r', '--repo', required=True,
         help='Github repo where issues will imported (required)')
@@ -135,15 +132,16 @@ def import_issue(bitbucket_data, argv):
     # print("Github data")
     # print("-----------")
     # print(github_data)
-    
+
     github_issue = None
-    while (github_issue == None):
-      try:
-        github_issue = argv.gh.issues.create(
-          github_data, user=argv.username, repo=argv.repo)
-      except:
-        print('Exception')
-        sleep(10)
+    while github_issue is None:
+        try:
+            github_issue = argv.gh.issues.create(
+                github_data, user=argv.username, repo=argv.repo
+            )
+        except:
+            print('Exception')
+            sleep(10)
 
     print('Imported as {github_issue}'.format(github_issue=github_issue))
 
@@ -159,27 +157,28 @@ def import_issue(bitbucket_data, argv):
 
         github_data['state'] = GITHUB_CLOSED_STATE
         github_updated_issue = None
-        while (github_updated_issue == None):
-          try:
-            github_updated_issue = argv.gh.issues.update(
-                github_issue.number, github_data,
-                user=argv.username, repo=argv.repo)
-          except:
-            print('Ex3ception')
-            sleep(10)
+        while github_updated_issue is None:
+            try:
+                github_updated_issue = argv.gh.issues.update(
+                    github_issue.number, github_data,
+                    user=argv.username, repo=argv.repo
+                )
+            except:
+                print('Exception')
+                sleep(10)
         print('Closed')
 
     if comment_message:
         github_new_comment = None
-        while (github_new_comment == None):
-          try:
-            github_new_comment = argv.gh.issues.comments.create(
-                number=github_issue.number,
-                message='\n\n'.join(comment_message),
-                user=argv.username, repo=argv.repo)
-          except:
-            print('Ex4ception')
-            sleep(10)
+        while github_new_comment is None:
+            try:
+                github_new_comment = argv.gh.issues.comments.create(
+                    number=github_issue.number,
+                    message='\n\n'.join(comment_message),
+                    user=argv.username, repo=argv.repo)
+            except:
+                print('Ex4ception')
+                sleep(10)
 
     return github_issue.number
 
@@ -192,18 +191,19 @@ def import_comment(github_issue_number, comment, argv):
         return
 
     ret = None
-    while (ret == None):
-      try:
-        ret = argv.gh.issues.comments.create(
-            number=github_issue_number,
-            message=('(Original comment by {user} on {created_on})\n\n'
-                     '{content}\n\n'
-                     ''.format(**comment)),
-            user = argv.username,
-            repo = argv.repo)
-      except:
-        print('Ex2ception')
-        sleep(10)
+    while ret is None:
+        try:
+            ret = argv.gh.issues.comments.create(
+                number=github_issue_number,
+                message=('(Original comment by {user} on {created_on})\n\n'
+                         '{content}\n\n'
+                         ''.format(**comment)),
+                user=argv.username,
+                repo=argv.repo
+            )
+        except:
+            print('Ex2ception')
+            sleep(10)
 
 
 def import_issues_and_comments(issues, comments, argv):
@@ -258,7 +258,7 @@ def main():
     with open(argv.file) as f:
         bitbucket_data = json.load(f)
 
-    gh = Github(login=argv.login, password=argv.password)
+    gh = Github(argv.token)
     argv.gh = gh
 
     ret = import_issues_and_comments(
