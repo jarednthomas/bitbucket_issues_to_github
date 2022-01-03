@@ -10,19 +10,26 @@ We use the [Python wrapper for Github API v3](https://github.com/copitux/python-
 Installation
 ------------
 
-1. Create a virtualenv and activate it.
-1. Clone this repo.
-1. `$ pip install -r requirements.txt`
-1. `$ python bb2gh_issues.py -h`
+1. Create a python virtualenv and activate it.
 
-You'll see an explanation of options.
+```
+python -m venv ./py3-env && cd py3-env/
+source ./bin/activate
+```
 
+2. Clone this repo in the virtualenv
+3. Install python dependencies 
 
-Example
+```
+pip install -r requirements.txt
+```
+4. Edit the ASSIGNEES section of `bb2gh_issues.py` accordingly
+
+Example Import
 -------
 
 ```
-$ python bb2gh_issues.py -l viniciusban -p my_password -r test_repo bb-issues.json
+$ python bb2gh_issues.py --user <repo_owner> --token <github_token> --repo <repo_name> db-1.0.json
 ```
 
 
@@ -51,9 +58,9 @@ Options explained
     You need to be logged in to create issues in Github. This is the
     username will be the creator of all issues and comments in this process.
 
-1. `-p`, `--password`
+1. `-`, `--token`
 
-    Password for `--login` user.
+    Github access token.
 
 1. `-r`, `--repo`
 
