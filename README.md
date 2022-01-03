@@ -58,7 +58,7 @@ Options explained
     You need to be logged in to create issues in Github. This is the
     username will be the creator of all issues and comments in this process.
 
-1. `-`, `--token`
+1. `-t`, `--token`
 
     Github access token.
 
