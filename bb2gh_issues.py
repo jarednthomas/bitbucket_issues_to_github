@@ -142,7 +142,7 @@ def import_issue(repo, bitbucket_data, argv):
     # print(github_data)
 
     github_issue = repo.create_issue(**github_data)
-    sleep(3)
+    sleep(30)
 
     print('Imported as {github_issue}'.format(github_issue=github_issue))
 
