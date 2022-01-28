@@ -15,7 +15,7 @@ More information about access tokens can be found in [github's documentation](ht
 1. Create a python virtualenv and activate it:
 
 ```
-python -m venv ./py3-env && cd py3-env/
+python3 -m venv ./py3-env && cd py3-env/
 source ./bin/activate
 ```
 
@@ -29,7 +29,7 @@ cd bitbucket_issues_to_github
 3. Within this cloned repo, install python dependencies: 
 
 ```
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ## Configuration
@@ -41,7 +41,7 @@ Example Import
 -------
 
 ```
-$ python bb2gh_issues.py --user <repo_owner> --token <github_token> --repo <repo_name> db-1.0.json
+$ python3 bb2gh_issues.py --user <repo_owner> --token <github_token> --repo <repo_name> db-1.0.json
 ```
 
 
