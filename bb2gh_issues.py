@@ -142,7 +142,8 @@ def import_issue(repo, bitbucket_data, argv):
     # print(github_data)
 
     github_issue = repo.create_issue(**github_data)
-    sleep(30)
+    print('Waiting 10 seconds to avoid hitting the rate limit.')
+    sleep(10)
 
     print('Imported as {github_issue}'.format(github_issue=github_issue))
 
